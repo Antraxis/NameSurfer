@@ -11,13 +11,17 @@ package com.shpp.p2p.cs.pkrmarenko.namesurfer;
  * and "ERIC" are the same names.
  */
 
+import javax.swing.*;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.HashMap;
 
 public class NameSurferDataBase implements NameSurferConstants {
-    ArrayList<String> nameSurfersList = new ArrayList<>();
+
+
+    HashMap<String, int[]> nameSurfersMap = new HashMap<>();
+
 
     /**
      * Creates a new NameSurferDataBase and initializes it using the
@@ -28,14 +32,15 @@ public class NameSurferDataBase implements NameSurferConstants {
     public NameSurferDataBase(String filename) {
 
         String line;
-        try {
-            BufferedReader br = new BufferedReader(new FileReader(filename));
+        try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
+
             while ((line = br.readLine()) != null) {
-                String newLine = line.toLowerCase();
-                nameSurfersList.add(newLine);
+                int[] ranks = extractNumbers(line);
+                String name = extractName(line);
+                nameSurfersMap.put(name, ranks);
             }
         } catch (IOException e) {
-            System.err.println("Error opening file " + ": " + e);
+            JOptionPane.showMessageDialog(null, "File not found");
         }
 
     }
@@ -46,17 +51,27 @@ public class NameSurferDataBase implements NameSurferConstants {
      * method returns null.
      */
     public NameSurferEntry findEntry(String name) {
-        String newName = name.toLowerCase();
-        for (String s : nameSurfersList) {
-            NameSurferEntry entry = new NameSurferEntry(s);
-            String stringName = entry.getName();
-            if (stringName.equals(newName)) {
-                return  entry;
-            }
+        if (nameSurfersMap.get(name) != null) {
+            return new NameSurferEntry(name);
         }
-
-        return  null;
+        return null;
 
     }
+
+    private String extractName(String filename) {
+        int number = filename.indexOf(" ");
+        return filename.substring(0, number).toLowerCase();
+    }
+
+    private int[] extractNumbers(String input) {
+        String[] parts = input.trim().split(" ");
+        int[] numbers = new int[input.length() - 1];
+
+        for (int i = 1; i < parts.length; i++) {
+            numbers[i - 1] = Integer.parseInt(parts[i]);
+        }
+        return numbers;
+    }
+
 }
 
